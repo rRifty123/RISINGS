@@ -40,7 +40,7 @@
                     <input type="password" id="auth-password" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white focus:outline-none focus:border-amber-500">
                 </div>
                 <div class="flex space-x-2 pt-2">
-                    <button id="btn-login" class="flex-1 bg-amber-770 bg-amber-700 hover:bg-amber-600 transition p-2.5 rounded font-bold uppercase text-sm tracking-wider">Sign In</button>
+                    <button id="btn-login" class="flex-1 bg-amber-700 hover:bg-amber-600 transition p-2.5 rounded font-bold uppercase text-sm tracking-wider">Sign In</button>
                     <button id="btn-register" class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-600 transition p-2.5 rounded font-bold uppercase text-sm tracking-wider">Register</button>
                 </div>
             </div>
@@ -151,10 +151,10 @@
         </div>
     </div>
 
-    <div id="gameplay-view" class="w-full h-full absolute top-0 left-0 hidden-view">
+    <div id="gameplay-view" class="w-full h-full absolute top-0 left-0 hidden-view flex flex-col justify-between">
         <div id="canvas-target" class="canvas-container"></div>
 
-        <div class="ui-layer p-4 justify-between items-start">
+        <div class="w-full p-4 flex justify-between items-start z-20 pointer-events-none">
             <div class="bg-slate-950/90 border border-amber-600/40 p-3 rounded shadow-lg interactive flex space-x-6 text-xs tracking-wider">
                 <div>REALM STATUS: <span id="panel-tier" class="text-amber-500 font-bold">TRIBE INITIALIZED</span></div>
                 <div>POPULATION: <span id="panel-pop" class="text-emerald-400 font-bold">500</span></div>
@@ -168,7 +168,7 @@
             </div>
         </div>
 
-        <div id="admin-modal" class="ui-layer inset-0 bg-black/70 items-center justify-center hidden-view">
+        <div id="admin-modal" class="fixed inset-0 bg-black/70 items-center justify-center hidden-view z-30 flex">
             <div class="bg-slate-900 border-2 border-red-700 p-6 rounded-lg max-w-md w-full mx-4 interactive">
                 <div class="flex justify-between items-center mb-4">
                     <h4 class="text-md font-bold text-red-500 tracking-wider">REALM MANAGEMENT CONTROL</h4>
@@ -180,8 +180,8 @@
             </div>
         </div>
 
-        <div class="ui-layer inset-x-0 bottom-0 p-4 justify-end items-center">
-            <div id="context-panel" class="bg-slate-950/95 border-2 border-amber-600/50 w-full max-w-4xl p-4 rounded-t-lg shadow-2xl interactive mb-2 hidden-view">
+        <div class="w-full p-4 flex flex-col items-center justify-end z-20 pointer-events-none mt-auto">
+            <div id="context-panel" class="bg-slate-950/95 border-2 border-amber-600/50 w-full max-w-4xl p-4 rounded shadow-2xl interactive mb-2 hidden-view">
                 <div class="flex space-x-2 border-b border-slate-800 pb-2 mb-3 text-xs uppercase tracking-wider font-bold">
                     <button onclick="switchContextTab('diplomacy')" id="tab-diplomacy" class="px-4 py-1.5 border-b-2 border-amber-500 text-amber-400">Diplomacy Matrix</button>
                     <button onclick="switchContextTab('economy')" id="tab-economy" class="px-4 py-1.5 text-slate-400">Economic Ledger</button>
@@ -327,12 +327,12 @@
         //           WINDOW COMPATIBILITY WRAPPERS    -->
         // ========================================== -->
         window.switchView = function(viewId) {
+            // Unify removal target array to ensure gameplay-view and main submenus switch states correctly
             document.querySelectorAll('.ui-layer, #gameplay-view, #auth-screen, #view-servers, #view-friends, #view-settings, #view-account, #main-menu').forEach(el => {
                 el.classList.add('hidden-view');
             });
             const target = document.getElementById(viewId);
             if(target) target.classList.remove('hidden-view');
-            if(viewId === 'gameplay-view') document.getElementById('gameplay-view').classList.remove('hidden-view');
         };
 
         // ========================================== -->
@@ -631,7 +631,6 @@
             
             document.getElementById('context-panel').classList.remove('hidden-view');
             
-            // Initial forced paint to guarantee UI numbers sync instantly upon server load
             calculateAndRepaintUiState(0);
 
             economyLoopInterval = setInterval(() => {
@@ -654,7 +653,6 @@
         }
 
         function calculateAndRepaintUiState(netRevenue) {
-            // If the loop hasn't run yet, estimate the baseline revenue dynamically
             if (netRevenue === 0 && economyLoopInterval) {
                 let farmIncome = (structuresList['farm'] || 0) * (isCountry ? 25 : 5);
                 let popIncome = (structuresList['village'] || 0) * 2 + ((structuresList['city'] || 0) * 5);
@@ -719,15 +717,12 @@
         window.purchaseAssetNode = function(id, cost) {
             if(currentCash < cost) return alert("Financial reserves insufficient.");
             
-            // Process the transaction immediately
             currentCash -= cost;
             structuresList[id] = (structuresList[id] || 0) + 1;
             
-            // FORCE INSTANT FRONTEND DRAW OVERRIDES
             calculateAndRepaintUiState(0);
             renderBuildSystemMatrix();
             
-            // Build 3D meshes along the Z-axis so they rise visibly upward on top of the map
             if(scene) {
                 const height = Math.random() * 4 + 2;
                 const geometry = new THREE.BoxGeometry(2.0, 2.0, height);
@@ -737,7 +732,6 @@
                 });
                 const buildingMesh = new THREE.Mesh(geometry, material);
                 
-                // Position randomly across the map, with half its height pointing out toward the screen
                 buildingMesh.position.set(Math.random() * 40 - 20, Math.random() * 20 - 10, height / 2);
                 scene.add(buildingMesh);
             }
