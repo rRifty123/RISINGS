@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RISINGS - Grand Strategy World Matrix</title>
+    <title>RISINGS - Flat Grand Strategy World Matrix</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Courier New', Courier, monospace; background-color: #0b0f19; color: #e2e8f0; }
         .old-map-bg {
@@ -13,7 +12,7 @@
             background-size: cover;
             background-position: center;
         }
-        .canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: auto; }
+        .canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; cursor: crosshair; }
         .ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; display: flex; flex-direction: column; }
         .interactive { pointer-events: auto; }
         .hidden-view { display: none !important; }
@@ -75,62 +74,49 @@
         </div>
     </div>
 
-    <div id="view-friends" class="ui-layer items-center justify-center p-8 hidden-view">
-        <div class="bg-slate-950/95 border-2 border-amber-600/60 p-6 rounded-lg w-full max-w-md h-[500px] flex flex-col interactive">
-            <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
-                <h3 class="text-xl font-bold tracking-wider text-amber-500">COMMUNICATIONS HUB</h3>
-                <button onclick="switchView('main-menu')" class="text-slate-400 hover:text-white uppercase text-xs">✕ Close</button>
-            </div>
-            <div class="flex space-x-2 mb-4">
-                <input type="text" id="friend-search" placeholder="Search username tag..." class="flex-1 bg-slate-900 border border-slate-700 rounded p-2 text-sm text-white focus:outline-none">
-                <button id="btn-send-request" class="bg-slate-800 hover:bg-slate-700 text-sm px-4 rounded font-bold uppercase border border-slate-600">Request</button>
-            </div>
-            <div id="friends-list" class="flex-1 overflow-y-auto space-y-2"></div>
-        </div>
-    </div>
-
-    <div id="view-settings" class="ui-layer items-center justify-center p-8 hidden-view">
-        <div class="bg-slate-950/95 border-2 border-amber-600/60 p-6 rounded-lg w-full max-w-md interactive">
-            <div class="flex justify-between items-center mb-6 border-b border-slate-800 pb-3">
-                <h3 class="text-xl font-bold tracking-wider text-amber-500">SYSTEM CONFIGURATION</h3>
-                <button onclick="switchView('main-menu')" class="text-slate-400 hover:text-white uppercase text-xs">✕ Close</button>
-            </div>
-            <div class="space-y-4 text-sm">
-                <div>
-                    <label class="block text-xs uppercase text-slate-400 mb-1">Graphics Asset Profile</label>
-                    <select class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-white"><option>Ultra High (3D Earth Engine)</option></select>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="view-account" class="ui-layer items-center justify-center p-8 hidden-view">
-        <div class="bg-slate-950/95 border-2 border-amber-600/60 p-6 rounded-lg w-full max-w-lg h-[520px] flex flex-col interactive">
-            <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
-                <h3 class="text-xl font-bold tracking-wider text-amber-500">IDENTITY PROFILE</h3>
-                <button onclick="switchView('main-menu')" class="text-slate-400 hover:text-white uppercase text-xs">✕ Close</button>
-            </div>
-            <div class="grid grid-cols-3 gap-4 flex-1 overflow-y-auto">
-                <div class="col-span-1 flex flex-col items-center">
-                    <img id="account-avatar" src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=150&q=80" class="w-20 h-20 rounded-full border border-amber-500 object-cover mb-2" alt="Avatar">
-                    <button id="btn-signout" class="w-full text-xs bg-slate-800 hover:bg-red-950 text-red-400 p-1 rounded border border-slate-700 mt-4">Sign Out</button>
-                </div>
-                <div class="col-span-2 space-y-3 text-sm">
-                    <input type="text" id="account-username" class="w-full bg-slate-900 border border-slate-700 rounded p-1.5 text-white">
-                </div>
-            </div>
-        </div>
-    </div>
-
     <div id="gameplay-view" class="w-full h-full absolute top-0 left-0 hidden-view flex flex-col justify-between">
-        <div id="canvas-target" class="canvas-container"></div>
+        <canvas id="map-canvas" class="canvas-container"></canvas>
 
-        <div id="claim-overlay" class="absolute inset-x-0 top-24 mx-auto max-w-md bg-slate-950/95 border-2 border-cyan-500 p-4 rounded shadow-2xl z-30 hidden-view interactive text-center">
-            <h4 class="text-cyan-400 font-bold tracking-wider text-sm uppercase mb-1">FOUND A SOVEREIGN REALM</h4>
-            <p class="text-[11px] text-slate-300 mb-3">Click 3 or more times on the Earth map grid to outline your custom state claim, then click submit.</p>
+        <div id="claim-overlay" class="absolute inset-y-0 top-16 mx-auto max-w-lg w-full bg-slate-950/95 border-2 border-cyan-500 p-5 rounded shadow-2xl z-30 hidden-view interactive flex flex-col space-y-4">
+            <div class="text-center">
+                <h4 class="text-cyan-400 font-bold tracking-wider text-sm uppercase">FOUND A SOVEREIGN REALM</h4>
+                <p class="text-[10px] text-slate-400">Demarcate up to 5 points on land masses (Oceans Blocked)</p>
+            </div>
+
+            <div class="space-y-2 text-xs">
+                <div>
+                    <label class="block text-[10px] uppercase text-slate-400 mb-0.5">Sovereignty Name Designation</label>
+                    <input type="text" id="claim-nation-name" placeholder="Enter Country Name..." class="w-full bg-slate-900 border border-slate-700 p-2 rounded text-white text-xs">
+                </div>
+
+                <div class="border border-slate-800 p-3 rounded bg-slate-900/40">
+                    <span class="block text-[10px] uppercase text-amber-500 font-bold mb-2">National Flag Designer Matrix</span>
+                    <div class="flex space-x-4 items-center">
+                        <div id="flag-preview-box" class="w-20 h-12 bg-slate-800 border border-slate-600 flex flex-col justify-between overflow-hidden relative">
+                            <div id="flag-stripe" class="absolute top-1/3 left-0 w-full h-1/3 bg-red-600"></div>
+                            <div id="flag-emblem" class="absolute inset-0 m-auto w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center text-[8px] font-bold text-black">*</div>
+                        </div>
+                        <div class="flex-1 grid grid-cols-2 gap-2 text-[10px]">
+                            <div>
+                                <label class="block text-slate-400">Base Color</label>
+                                <input type="color" id="flag-color-base" value="#1e3a8a" class="w-full h-6 bg-slate-800 border border-slate-700 rounded p-0.5 cursor-pointer" oninput="repaintFlagBlueprint()">
+                            </div>
+                            <div>
+                                <label class="block text-slate-400">Stripe Pattern</label>
+                                <input type="color" id="flag-color-stripe" value="#ef4444" class="w-full h-6 bg-slate-800 border border-slate-700 rounded p-0.5 cursor-pointer" oninput="repaintFlagBlueprint()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-[11px] text-slate-300 bg-slate-900/80 p-2 rounded border border-slate-800 text-center">
+                Vertices Locked: <span id="vertex-counter" class="font-bold text-cyan-400">0 / 5</span>
+            </div>
+
             <div class="flex space-x-2">
-                <button onclick="clearDraftClaim()" class="flex-1 bg-slate-800 text-[10px] py-1.5 rounded font-bold uppercase text-slate-400">Reset Vertices</button>
-                <button onclick="submitDraftClaim()" class="flex-1 bg-cyan-700 hover:bg-cyan-600 text-[10px] py-1.5 rounded font-bold uppercase text-white">Finalize Borders</button>
+                <button onclick="clearDraftClaim()" class="flex-1 bg-slate-800 text-[10px] py-2 rounded font-bold uppercase text-slate-400">Clear Pins</button>
+                <button onclick="submitDraftClaim()" class="flex-1 bg-cyan-700 hover:bg-cyan-600 text-[10px] py-2 rounded font-bold uppercase text-white">Finalize Borders</button>
             </div>
         </div>
 
@@ -142,9 +128,21 @@
                 <div>FOOD SUPPLY: <span id="panel-food" class="text-orange-400 font-bold">200</span></div>
             </div>
 
-            <div class="flex space-x-2 interactive">
-                <button id="btn-admin-panel" class="bg-red-950/90 hover:bg-red-900 border border-red-700 text-xs text-red-200 px-3 py-2 rounded uppercase font-bold hidden">Manage Realm Invites</button>
+            <div class="flex space-x-2 interactive ml-auto">
                 <button onclick="exitActiveServer()" class="bg-slate-950/90 hover:bg-slate-900 border border-slate-700 text-xs px-4 py-2 rounded uppercase font-bold text-slate-300">Leave Realm</button>
+            </div>
+        </div>
+
+        <div id="intel-modal" class="fixed inset-x-0 bottom-64 mx-auto max-w-sm bg-slate-950/95 border-2 border-red-600/80 p-4 rounded-lg shadow-2xl z-30 hidden-view interactive flex flex-col text-xs">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-1.5 mb-2">
+                <span class="font-bold tracking-wider text-red-500 uppercase">FOREIGN INTELLIGENCE OVERVIEW</span>
+                <button onclick="document.getElementById('intel-modal').classList.add('hidden-view')" class="text-slate-400 text-[10px]">✕</button>
+            </div>
+            <div class="space-y-1 text-slate-300">
+                <div>Country Handle: <span id="intel-country" class="text-white font-bold">N/A</span></div>
+                <div>Ruler/Operator: <span id="intel-ruler" class="text-white">N/A</span></div>
+                <div>Claim Boundary Nodes: <span id="intel-nodes" class="text-cyan-400">0</span></div>
+                <div>Operational Profile: <span id="intel-npc" class="text-amber-500 font-bold">Human Player Node</span></div>
             </div>
         </div>
 
@@ -152,9 +150,8 @@
             <div id="context-panel" class="bg-slate-950/95 border-2 border-amber-600/50 w-full max-w-4xl p-4 rounded shadow-2xl interactive mb-2 hidden-view">
                 <div class="flex space-x-2 border-b border-slate-800 pb-2 mb-3 text-xs uppercase tracking-wider font-bold">
                     <button onclick="switchContextTab('diplomacy')" id="tab-diplomacy" class="px-4 py-1.5 border-b-2 border-amber-500 text-amber-400">War Matrix</button>
-                    <button onclick="switchContextTab('economy')" id="tab-economy" class="px-4 py-1.5 text-slate-400">Economic Ledger</button>
+                    <button onclick="switchContextTab('economy')" id="tab-economy" class="px-4 py-1.5 text-slate-400">Economic Ledger / Management</button>
                     <button onclick="switchContextTab('structures')" id="tab-structures" class="px-4 py-1.5 text-slate-400">Structure Matrix</button>
-                    <button onclick="toggle3DView()" class="px-4 py-1.5 text-cyan-400 bg-cyan-950/40 border border-cyan-800 rounded ml-auto">Toggle Camera Angle</button>
                 </div>
 
                 <div id="ctab-diplomacy" class="h-40 overflow-y-auto space-y-2 text-xs">
@@ -170,7 +167,7 @@
                     </div>
                 </div>
 
-                <div id="ctab-economy" class="h-40 text-xs hidden-view">
+                <div id="ctab-economy" class="h-40 text-xs hidden-view space-y-4">
                     <div class="grid grid-cols-3 gap-4">
                         <div class="bg-slate-900/60 p-3 rounded">
                             <h6 class="text-emerald-400 uppercase font-bold text-[10px] mb-1">Revenue Stream</h6>
@@ -190,6 +187,12 @@
                             <div class="text-[11px] text-slate-300 mt-2" id="civil-war-status">Stable Flow (Maintained Economy)</div>
                         </div>
                     </div>
+                    
+                    <div class="border-t border-slate-800 pt-3 flex space-x-2 items-center">
+                        <span class="text-[10px] text-slate-400 uppercase font-bold">Modify Country Designation:</span>
+                        <input type="text" id="rename-country-input" placeholder="New Realm Title..." class="bg-slate-900 border border-slate-700 rounded p-1 text-white text-xs max-w-xs w-full">
+                        <button onclick="commitCountryRename()" class="bg-amber-700 hover:bg-amber-600 text-[10px] px-3 py-1 rounded text-white font-bold uppercase">Update Identity Title</button>
+                    </div>
                 </div>
 
                 <div id="ctab-structures" class="h-40 overflow-y-auto text-xs hidden-view">
@@ -197,8 +200,8 @@
                 </div>
             </div>
 
-            <div class="bg-slate-950/80 border border-slate-800 text-amber-500 font-bold text-[10px] px-4 py-1 rounded shadow uppercase tracking-wider interactive">
-                Click anywhere on your designated territory lines to unfold control systems!
+            <div class="bg-slate-950/80 border border-slate-800 text-cyan-400 font-bold text-[10px] px-4 py-1 rounded shadow uppercase tracking-wider interactive">
+                Flat Map Array Engaged: Left Click regions to inspect, claim territory bounds, or map coordinates.
             </div>
         </div>
     </div>
@@ -212,10 +215,7 @@
             apiKey: "AIzaSyCECv03zTHSuAO9D9TTB9As7WHgNZyj8bw",
             authDomain: "block-royale-6fb9c.firebaseapp.com",
             databaseURL: "https://block-royale-6fb9c-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "block-royale-6fb9c",
-            storageBucket: "block-royale-6fb9c.firebasestorage.app",
-            messagingSenderId: "932741044830",
-            appId: "1:932741044830:web:52d7591f07532eb53bb2cf"
+            projectId: "block-royale-6fb9c"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -225,14 +225,13 @@
         let currentUser = null;
         let activeServerId = null;
         
-        let scene = null, camera = null, renderer = null, raycaster = null, mouse = null;
-        let animationFrameId = null;
-        let is3DMode = false;
+        // 2D Flat Context Engine Properties
+        let canvas = null, ctx = null;
+        let earthMapImage = new Image();
         
         let localClaimVertices = [];
         let globalClaimsCache = {};
         let structuresList = {};
-        let visualBordersGroup = null;
 
         let economyLoopInterval = null;
         let currentCash = 1000;
@@ -251,19 +250,18 @@
         ];
 
         window.switchView = function(viewId) {
-            document.querySelectorAll('.ui-layer, #gameplay-view, #auth-screen, #view-servers, #view-friends, #view-settings, #view-account, #main-menu').forEach(el => {
+            document.querySelectorAll('.ui-layer, #gameplay-view, #auth-screen, #view-servers, #main-menu').forEach(el => {
                 el.classList.add('hidden-view');
             });
             const target = document.getElementById(viewId);
             if(target) target.classList.remove('hidden-view');
         };
 
-        // AUTH CONTEXT PIPELINES
+        // AUTH CONTROL LOGIC
         document.getElementById('btn-register').addEventListener('click', async () => {
             const email = document.getElementById('auth-email').value;
             const password = document.getElementById('auth-password').value;
             const username = document.getElementById('auth-username').value || "Commander";
-            if(!email || !password) return alert("Fill entry positions.");
             try {
                 const creds = await createUserWithEmailAndPassword(auth, email, password);
                 await updateProfile(creds.user, { displayName: username });
@@ -272,9 +270,7 @@
         });
 
         document.getElementById('btn-login').addEventListener('click', async () => {
-            const email = document.getElementById('auth-email').value;
-            const password = document.getElementById('auth-password').value;
-            try { await signInWithEmailAndPassword(auth, email, password); } catch (err) { alert(err.message); }
+            try { await signInWithEmailAndPassword(auth, document.getElementById('auth-email').value, document.getElementById('auth-password').value); } catch (err) { alert(err.message); }
         });
 
         onAuthStateChanged(auth, (user) => {
@@ -299,93 +295,225 @@
         }
 
         window.joinServer = async function(serverId) {
-            // Permanent Ban Check: If user was flagged as permanently wiped out, deny entryway
             const banSnap = await get(ref(db, `servers/${serverId}/permaBanned/${currentUser.uid}`));
             if(banSnap.exists()) {
-                alert("CRITICAL VIOLATION: Your civilization was completely annihilated in this realm. Connection terminated permanently.");
+                alert("CRITICAL ANNIHILATION EXCLUSION: Your civilization was completely erased in this map domain. Entrance denied.");
                 return;
             }
 
             activeServerId = serverId;
             switchView('gameplay-view');
             
-            raycaster = new THREE.Raycaster();
-            mouse = new THREE.Vector2();
-            
-            bootThreeEarthEngine();
+            bootFlatCanvasEngine();
             listenToWorldSovereignty();
         };
 
         window.exitActiveServer = function() {
             if(economyLoopInterval) clearInterval(economyLoopInterval);
-            if(animationFrameId) cancelAnimationFrame(animationFrameId);
             activeServerId = null;
             switchView('main-menu');
         };
 
         // ========================================== -->
-        //          3D EARTH ENGINE & RAYCASTING      -->
+        //          2D FLAT MAP INTERACTIVE CANVAS    -->
         // ========================================== -->
-        function bootThreeEarthEngine() {
-            const container = document.getElementById('canvas-target');
-            container.innerHTML = "";
-
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x04060a);
-
-            camera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 1000);
-            camera.position.set(0, 0, 50);
-
-            renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(container.clientWidth, container.clientHeight);
-            container.appendChild(renderer.domElement);
-
-            visualBordersGroup = new THREE.Group();
-            scene.add(visualBordersGroup);
-
-            // Generates detailed physical topographic planet structure coordinates
-            const earthGeo = new THREE.SphereGeometry(18, 40, 40);
-            const earthMat = new THREE.MeshBasicMaterial({
-                color: 0x111827,
-                wireframe: true
-            });
-            const earthMesh = new THREE.Mesh(earthGeo, earthMat);
-            earthMesh.name = "planet_surface";
-            scene.add(earthMesh);
-
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.9);
-            scene.add(ambientLight);
-
-            renderer.domElement.addEventListener('click', handleWorldInteraction, false);
+        function bootFlatCanvasEngine() {
+            canvas = document.getElementById('map-canvas');
+            ctx = canvas.getContext('2d', { willReadFrequently: true });
             
-            if(animationFrameId) cancelAnimationFrame(animationFrameId);
-            animateLoop();
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            // Load high definition outline asset map blueprint
+            earthMapImage.src = "https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?auto=format&fit=crop&w=1200&q=80";
+            earthMapImage.onload = () => { triggerMapRepaint(); };
+
+            canvas.addEventListener('click', handleCanvasCoordInput);
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                triggerMapRepaint();
+            });
+            
+            repaintFlagBlueprint();
         }
 
-        function animateLoop() {
-            animationFrameId = requestAnimationFrame(animateLoop);
-            if(!is3DMode && scene.children[0]) {
-                scene.rotation.y += 0.001; 
+        window.repaintFlagBlueprint = function() {
+            const base = document.getElementById('flag-color-base').value;
+            const stripe = document.getElementById('flag-color-stripe').value;
+            
+            document.getElementById('flag-preview-box').style.backgroundColor = base;
+            document.getElementById('flag-stripe').style.backgroundColor = stripe;
+        };
+
+        function triggerMapRepaint() {
+            if(!ctx) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw clean background map layer
+            ctx.drawImage(earthMapImage, 0, 0, canvas.width, canvas.height);
+
+            // Redraw border polygon parameters for all active registered nations
+            Object.keys(globalClaimsCache).forEach(uid => {
+                const claim = globalClaimsCache[uid];
+                if(!claim.vertices || claim.vertices.length === 0) return;
+
+                ctx.beginPath();
+                ctx.moveTo(claim.vertices[0].x, claim.vertices[0].y);
+                for(let i = 1; i < claim.vertices.length; i++) {
+                    ctx.lineTo(claim.vertices[i].x, claim.vertices[i].y);
+                }
+                ctx.closePath();
+
+                // Differentiate styles based on alignment tags
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = claim.isNPC ? '#a8a29e' : (uid === currentUser.uid ? '#10b981' : '#ef4444');
+                ctx.stroke();
+
+                ctx.fillStyle = claim.flagBase ? claim.flagBase + "44" : "rgba(245, 158, 11, 0.2)";
+                ctx.fill();
+
+                // Draw centered indicator nameplate text
+                const avgX = claim.vertices.reduce((sum, v) => sum + v.x, 0) / claim.vertices.length;
+                const avgY = claim.vertices.reduce((sum, v) => sum + v.y, 0) / claim.vertices.length;
+                ctx.fillStyle = "#ffffff";
+                ctx.font = "bold 10px monospace";
+                ctx.fillText(claim.countryName || "Tribal Realm", avgX - 25, avgY);
+            });
+
+            // Draw local blueprint pins
+            localClaimVertices.forEach((pt, index) => {
+                ctx.beginPath();
+                ctx.arc(pt.x, pt.y, 5, 0, 2 * Math.PI);
+                ctx.fillStyle = "#22d3ee";
+                ctx.fill();
+                ctx.fillStyle = "#ffffff";
+                ctx.font = "9px Arial";
+                ctx.fillText(index + 1, pt.x - 3, pt.y - 8);
+            });
+        }
+
+        // ========================================== -->
+        //     OCEAN DETECTOR & VERTEX CONSTRAINT     -->
+        // ========================================== -->
+        function handleCanvasCoordInput(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+
+            // ANALYTICAL OCEAN BLOCKED CHECKS
+            // Uses standard pixel mapping matrix sampling vectors
+            const pixelSample = ctx.getImageData(clickX, clickY, 1, 1).data;
+            const r = pixelSample[0], g = pixelSample[1], b = pixelSample[2];
+            
+            // Rejects deep dark ocean coordinate matrices from basic canvas imagery assets
+            if (b > r * 1.4 && b > 35 && r < 45 && g < 75) {
+                alert("NAVIGATION PORTAL ERROR: Cannot found a country or tribe inside maritime deep sea waters! Pick solid terrain landmasses.");
+                return;
             }
-            renderer.render(scene, camera);
+
+            if(!globalClaimsCache[currentUser.uid]) {
+                // STRICT STARTING DOTS MAXIMUM CAPPED AT 5
+                if(localClaimVertices.length >= 5) {
+                    alert("BORDER DEFINITION CONSTRAINT: Maximum starting dots limit reached (Capped at 5 maximum locations).");
+                    return;
+                }
+
+                localClaimVertices.push({ x: clickX, y: clickY });
+                document.getElementById('vertex-counter').innerText = `${localClaimVertices.length} / 5`;
+                triggerMapRepaint();
+            } else {
+                // VERIFY IF CLICKED ANOTHER NATION TO EXTRACT INTEL FIELD PROFILES
+                let hitTargetUid = null;
+                Object.keys(globalClaimsCache).forEach(uid => {
+                    if(checkPointInsidePolygon({x: clickX, y: clickY}, globalClaimsCache[uid].vertices)) {
+                        hitTargetUid = uid;
+                    }
+                });
+
+                if(hitTargetUid) {
+                    displayForeignIntelMatrix(hitTargetUid);
+                    if(hitTargetUid === currentUser.uid) {
+                        document.getElementById('context-panel').classList.remove('hidden-view');
+                        renderBuildSystemMatrix();
+                    }
+                }
+            }
         }
 
-        window.toggle3DView = function() {
-            is3DMode = !is3DMode;
-            if(is3DMode) { camera.position.set(0, -25, 35); camera.lookAt(0,0,0); }
-            else { camera.position.set(0, 0, 50); camera.lookAt(0,0,0); }
+        function checkPointInsidePolygon(point, vs) {
+            // Ray-casting algorithm inside 2D coordinate space loops
+            let x = point.x, y = point.y;
+            let inside = false;
+            for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+                let xi = vs[i].x, yi = vs[i].y;
+                let xj = vs[j].x, yj = vs[j].y;
+                let intersect = ((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+                if (intersect) inside = !inside;
+            }
+            return inside;
+        }
+
+        function displayForeignIntelMatrix(uid) {
+            const target = globalClaimsCache[uid];
+            document.getElementById('intel-country').innerText = target.countryName || "Unnamed Realm";
+            document.getElementById('intel-ruler').innerText = target.rulerName || "NPC AI Core";
+            document.getElementById('intel-nodes').innerText = target.vertices?.length || 0;
+            document.getElementById('intel-npc').innerText = target.isNPC ? "Automated NPC Sub-State" : "Active Human Commander";
+            
+            document.getElementById('intel-modal').classList.remove('hidden-view');
+        }
+
+        window.clearDraftClaim = function() {
+            localClaimVertices = [];
+            document.getElementById('vertex-counter').innerText = "0 / 5";
+            triggerMapRepaint();
+        };
+
+        window.submitDraftClaim = async function() {
+            const designatedName = document.getElementById('claim-nation-name').value;
+            if(!designatedName) return alert("IDENTITY PROTOCOL ERROR: You must explicitly name your country at the start.");
+            if(localClaimVertices.length < 3) return alert("GEOMETRIC ERROR: Outline requires 3 or more coordinate vector pinpoints.");
+            
+            const baseFlag = document.getElementById('flag-color-base').value;
+            const stripeFlag = document.getElementById('flag-color-stripe').value;
+
+            await set(ref(db, `servers/${activeServerId}/claims/${currentUser.uid}`), {
+                rulerName: currentUser.displayName,
+                countryName: designatedName,
+                vertices: localClaimVertices,
+                flagBase: baseFlag,
+                flagStripe: stripeFlag,
+                isNPC: false,
+                upkeepScale: localClaimVertices.length
+            });
+            localClaimVertices = [];
         };
 
         // ========================================== -->
-        //          TERRITORIAL CLAIM TRACKER         -->
+        //          RENAME IDENTITY CAPABILITY        -->
+        // ========================================== -->
+        window.commitCountryRename = async function() {
+            const nextName = document.getElementById('rename-country-input').value;
+            if(!nextName) return alert("String buffer empty.");
+            
+            await update(ref(db, `servers/${activeServerId}/claims/${currentUser.uid}`), {
+                countryName: nextName
+            });
+            alert("Sovereign label re-registered safely across cloud maps.");
+            document.getElementById('rename-country-input').value = "";
+        };
+
+        // ========================================== -->
+        //          WAR & HARDCORE BLACKLISTS         -->
         // ========================================== -->
         function listenToWorldSovereignty() {
             onValue(ref(db, `servers/${activeServerId}/claims`), (snap) => {
                 globalClaimsCache = snap.val() || {};
-                renderVisualTerritoryBorders();
+                
+                if(canvas) triggerMapRepaint();
 
                 if(!globalClaimsCache[currentUser.uid]) {
-                    // Force land allocation drawing mode setup
                     document.getElementById('claim-overlay').classList.remove('hidden-view');
                     document.getElementById('context-panel').classList.add('hidden-view');
                     document.getElementById('resource-header-panel').classList.add('hidden-view');
@@ -398,91 +526,6 @@
             });
         }
 
-        function handleWorldInteraction(event) {
-            const rect = renderer.domElement.getBoundingClientRect();
-            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(scene.children, true);
-
-            if (intersects.length > 0) {
-                const hit = intersects.find(i => i.object.name === "planet_surface");
-                if (hit) {
-                    const pt = hit.point;
-                    
-                    // If player hasn't claimed a base plot yet, add vector nodes to frontier map paths
-                    if(!globalClaimsCache[currentUser.uid]) {
-                        localClaimVertices.push({x: pt.x, y: pt.y, z: pt.z});
-                        
-                        // Drop a visual vertex pinpoint marker node
-                        const pinGeo = new THREE.SphereGeometry(0.4, 8, 8);
-                        const pinMat = new THREE.MeshBasicMaterial({ color: 0x22d3ee });
-                        const pin = new THREE.Mesh(pinGeo, pinMat);
-                        pin.position.set(pt.x, pt.y, pt.z);
-                        visualBordersGroup.add(pin);
-                    } else {
-                        // Regular Interaction: Verify if clicked coordinates are inside owned perimeter lines
-                        if(checkPointProximityToClaim(pt, globalClaimsCache[currentUser.uid].vertices)) {
-                            document.getElementById('context-panel').classList.remove('hidden-view');
-                            renderBuildSystemMatrix();
-                        }
-                    }
-                }
-            }
-        }
-
-        window.clearDraftClaim = function() {
-            localClaimVertices = [];
-            bootThreeEarthEngine();
-        };
-
-        window.submitDraftClaim = async function() {
-            if(localClaimVertices.length < 3) return alert("Demarcation rejected: At least 3 points required.");
-            
-            await set(ref(db, `servers/${activeServerId}/claims/${currentUser.uid}`), {
-                rulerName: currentUser.displayName,
-                vertices: localClaimVertices,
-                isNPC: false,
-                upkeepScale: localClaimVertices.length
-            });
-            localClaimVertices = [];
-        };
-
-        function checkPointProximityToClaim(pt, vertices) {
-            // Fast geometric distance envelope calculation bounds verification
-            for(let v of vertices) {
-                let dist = Math.sqrt(Math.pow(pt.x-v.x,2)+Math.pow(pt.y-v.y,2)+Math.pow(pt.z-v.z,2));
-                if(dist < 8.5) return true;
-            }
-            return false;
-        }
-
-        function renderVisualTerritoryBorders() {
-            // Flush old perimeter boundary ring elements safely
-            while(visualBordersGroup.children.length > 0){ 
-                visualBordersGroup.remove(visualBordersGroup.children[0]); 
-            }
-
-            Object.keys(globalClaimsCache).forEach(uid => {
-                const claim = globalClaimsCache[uid];
-                const points = [];
-                claim.vertices.forEach(v => points.push(new THREE.Vector3(v.x, v.y, v.z)));
-                if(points.length > 0) points.push(points[0]); // Complete perimeter geometry ring loop
-
-                const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
-                const lineMat = new THREE.LineBasicMaterial({
-                    color: claim.isNPC ? 0xa8a29e : (uid === currentUser.uid ? 0x10b981 : 0xef4444),
-                    linewidth: 3
-                });
-                const boundaryLine = new THREE.Line(lineGeo, lineMat);
-                visualBordersGroup.add(boundaryLine);
-            });
-        }
-
-        // ========================================== -->
-        //          WAR & TERRITORY ANNEXATION        -->
-        // ========================================== -->
         function loadDiplomacyMatrix() {
             const list = document.getElementById('diplomacy-list');
             list.innerHTML = "";
@@ -494,8 +537,8 @@
                 const item = document.createElement('div');
                 item.className = "flex justify-between items-center bg-slate-900 p-2 rounded mb-1";
                 item.innerHTML = `
-                    <span>${nation.rulerName} ${nation.isNPC ? '(NPC Sub-State)' : ''}</span>
-                    <button onclick="executeConquestStrike('${uid}')" class="bg-red-950 text-red-400 border border-red-800 px-2 py-0.5 rounded text-[10px] font-bold uppercase">Strike Warzone</button>
+                    <span>${nation.countryName || 'Unknown Clan'} (${nation.rulerName})</span>
+                    <button onclick="executeConquestStrike('${uid}')" class="bg-red-950 text-red-400 border border-red-800 px-2 py-0.5 rounded text-[10px] font-bold uppercase">Strike Boundary</button>
                 `;
                 list.appendChild(item);
             });
@@ -505,58 +548,48 @@
             const enemyClaim = globalClaimsCache[targetUid];
             const log = document.getElementById('war-list');
             
-            // 70% Simulated Win Probability Modifier
-            if(Math.random() > 0.3) {
-                log.innerHTML += `<div class="text-emerald-400 font-bold">[VICTORY] Annexed territory land parcels from ${enemyClaim.rulerName}!</div>`;
+            if(Math.random() > 0.35) {
+                log.innerHTML += `<div class="text-emerald-400 font-bold">[VICTORY] Annexed territory from ${enemyClaim.countryName}!</div>`;
                 
-                // Transfer land coordinates from enemy claim over to player's territory vertices arrays
                 const updatedPlayerVertices = [...globalClaimsCache[currentUser.uid].vertices, ...enemyClaim.vertices];
                 await update(ref(db, `servers/${activeServerId}/claims/${currentUser.uid}`), { vertices: updatedPlayerVertices });
                 
-                // ANNIHILATION AND SERVER BLACKLIST BAN CONDITION TRIGGERED
-                log.innerHTML += `<div class="text-red-500 font-bold">[ANNIHILATION] ${enemyClaim.rulerName} has been wiped off the map layer.</div>`;
+                log.innerHTML += `<div class="text-red-500 font-bold">[BANISHED] ${enemyClaim.countryName} completely wiped off flat map context.</div>`;
                 
                 if(!enemyClaim.isNPC) {
-                    // Log the profile identifier permanently inside server's exile database path strings
                     await set(ref(db, `servers/${activeServerId}/permaBanned/${targetUid}`), true);
                 }
-                
                 await remove(ref(db, `servers/${activeServerId}/claims/${targetUid}`));
             } else {
-                log.innerHTML += `<div class="text-red-400">[DEFEAT] Tactical offensive repelled by defensive military garrisons.</div>`;
-                currentCash = Math.max(0, currentCash - 300);
+                log.innerHTML += `<div class="text-red-400">[DEFEAT] Attack vector repelled.</div>`;
+                currentCash = Math.max(0, currentCash - 250);
             }
             calculateAndRepaintUiState(0);
         };
 
         // ========================================== -->
-        //     ECONOMY LOOP & NPC CIVIL WAR CRISIS    -->
+        //     ECONOMY LOOP & CIVIL WAR SPLINTERING   -->
         // ========================================== -->
         function startEconomyLoopPipeline() {
             if(economyLoopInterval) clearInterval(economyLoopInterval);
-            
             calculateAndRepaintUiState(0);
 
             economyLoopInterval = setInterval(() => {
                 let farmIncome = (structuresList['farm'] || 0) * (isCountry ? 25 : 5);
                 let totalInflow = 10 + farmIncome;
                 
-                // Upkeep scales dynamically with how large your custom territory border vertices array is
                 let verticesCount = globalClaimsCache[currentUser.uid]?.vertices?.length || 4;
-                let maintenanceCosts = Math.floor(verticesCount * 3.5);
+                let maintenanceCosts = Math.floor(verticesCount * 4);
                 
                 let netRevenue = totalInflow - maintenanceCosts;
                 currentCash += netRevenue;
 
-                let popGrowth = (structuresList['village'] || 0) * 5 + ((structuresList['city'] || 0) * 100);
-                currentPopulation += popGrowth;
+                currentPopulation += (structuresList['village'] || 0) * 5 + ((structuresList['city'] || 0) * 100);
                 currentFood += (structuresList['farm'] || 0) * 2;
 
                 document.getElementById('eco-upkeep-fee').innerText = `-$${maintenanceCosts}/s`;
 
-                // CRITICAL CIVIL WAR COLLAPSE EVALUATOR MATRIX ENGINE
                 evaluateCivilWarCrisis(netRevenue, verticesCount);
-
                 calculateAndRepaintUiState(netRevenue);
             }, 1000);
         }
@@ -564,14 +597,12 @@
         async function evaluateCivilWarCrisis(netRevenue, landSize) {
             const warningElement = document.getElementById('civil-war-status');
             
-            // Civil War Trigger Profile: Country is very large (10+ boundary nodes) and experiencing massive fiscal drain
-            if(landSize >= 8 && netRevenue <= -30) {
-                warningElement.innerHTML = `<span class="text-red-500 font-bold animate-pulse">⚠️ COLLAPSE IMMINENT (RISK DEFICIT)</span>`;
+            if(landSize >= 7 && netRevenue <= -25) {
+                warningElement.innerHTML = `<span class="text-red-500 font-bold animate-pulse">⚠️ COLLAPSE IMMINENT (DEFICIT)</span>`;
                 
-                // 15% Tick Chance to fracture into splintered civil states
-                if(Math.random() < 0.15) {
+                if(Math.random() < 0.12) {
                     clearInterval(economyLoopInterval);
-                    alert("⚠️ CIVIL WAR REBELLION DETECTED: Your massive financial deficit caused your empire to split and collapse! Splinter fractions have declared independent NPC autonomy status.");
+                    alert("⚠️ FACTION COUP: Your financial deficit caused a civil war fracture! Rebellions created new NPC-governed territories.");
                     
                     const entireVertices = [...globalClaimsCache[currentUser.uid].vertices];
                     const halfSize = Math.floor(entireVertices.length / 2);
@@ -579,25 +610,22 @@
                     const leftFraction = entireVertices.slice(0, halfSize);
                     const rightFraction = entireVertices.slice(halfSize);
                     
-                    // Rewrite player as downscaled, fractured remnants state
                     await update(ref(db, `servers/${activeServerId}/claims/${currentUser.uid}`), { vertices: leftFraction });
                     
-                    // Spawn new NPC run micro-state capturing the fractured geography positions
                     const npcId = "npc_" + Math.floor(Math.random() * 100000);
                     await set(ref(db, `servers/${activeServerId}/claims/${npcId}`), {
-                        rulerName: "Splinter Rebel Colony " + Math.floor(Math.random() * 90),
+                        rulerName: "NPC Rebel Governor",
+                        countryName: "Splinter State " + Math.floor(Math.random() * 99),
                         vertices: rightFraction,
                         isNPC: true
                     });
                     
-                    // Reset local structural assets asset matrices
                     structuresList = {};
-                    currentCash = 300;
-                    currentPopulation = 100;
+                    currentCash = 250;
                     location.reload();
                 }
             } else {
-                warningElement.innerHTML = `<span class="text-emerald-400">Stable Flow (Maintained Economy)</span>`;
+                warningElement.innerHTML = `<span class="text-emerald-400">Stable Flow</span>`;
             }
         }
 
@@ -612,16 +640,13 @@
             
             document.getElementById('eco-farm-income').innerText = `+$${((structuresList['farm'] || 0) * (isCountry ? 25 : 5))}/s`;
             
-            if(!isCountry && currentPopulation >= 5000) {
+            if(!isCountry && currentPopulation >= 2500) {
                 isCountry = true;
                 document.getElementById('panel-tier').innerText = "SOVEREIGN NATION-STATE";
                 renderBuildSystemMatrix();
             }
         }
 
-        // ========================================== -->
-        //          STRUCTURE ARCHITECTURE FACTORY    -->
-        // ========================================== -->
         function renderBuildSystemMatrix() {
             const grid = document.getElementById('build-grid');
             grid.innerHTML = "";
