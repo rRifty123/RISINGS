@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RISINGS - Flat Grand Strategy World Matrix</title>
+    <title>RISINGS - Continental World Matrix</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: 'Courier New', Courier, monospace; background-color: #0b0f19; color: #e2e8f0; }
@@ -80,7 +80,7 @@
         <div id="claim-overlay" class="absolute inset-y-0 top-16 mx-auto max-w-lg w-full bg-slate-950/95 border-2 border-cyan-500 p-5 rounded shadow-2xl z-30 hidden-view interactive flex flex-col space-y-4">
             <div class="text-center">
                 <h4 class="text-cyan-400 font-bold tracking-wider text-sm uppercase">FOUND A SOVEREIGN REALM</h4>
-                <p class="text-[10px] text-slate-400">Demarcate up to 5 points on land masses (Oceans Blocked)</p>
+                <p class="text-[10px] text-slate-400">Map out up to 5 points across landmasses (Oceans Blocked)</p>
             </div>
 
             <div class="space-y-2 text-xs">
@@ -201,15 +201,15 @@
             </div>
 
             <div class="bg-slate-950/80 border border-slate-800 text-cyan-400 font-bold text-[10px] px-4 py-1 rounded shadow uppercase tracking-wider interactive">
-                Flat Map Array Engaged: Left Click regions to inspect, claim territory bounds, or map coordinates.
+                Continental Grid Active: Left Click land regions to inspect, outline territories, or view profiles.
             </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getDatabase, ref, set, update, onValue, push, get, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, set, update, onValue, get, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCECv03zTHSuAO9D9TTB9As7WHgNZyj8bw",
@@ -225,9 +225,8 @@
         let currentUser = null;
         let activeServerId = null;
         
-        // 2D Flat Context Engine Properties
         let canvas = null, ctx = null;
-        let earthMapImage = new Image();
+        let worldOutlineImage = new Image();
         
         let localClaimVertices = [];
         let globalClaimsCache = {};
@@ -297,7 +296,7 @@
         window.joinServer = async function(serverId) {
             const banSnap = await get(ref(db, `servers/${serverId}/permaBanned/${currentUser.uid}`));
             if(banSnap.exists()) {
-                alert("CRITICAL ANNIHILATION EXCLUSION: Your civilization was completely erased in this map domain. Entrance denied.");
+                alert("CRITICAL EXCLUSION: Your civilization was entirely overrun on this map layout. Entry denied permanently.");
                 return;
             }
 
@@ -315,7 +314,7 @@
         };
 
         // ========================================== -->
-        //          2D FLAT MAP INTERACTIVE CANVAS    -->
+        //          2D GEOGRAPHICAL OUTLINE CANVAS    -->
         // ========================================== -->
         function bootFlatCanvasEngine() {
             canvas = document.getElementById('map-canvas');
@@ -324,9 +323,9 @@
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
 
-            // Load high definition outline asset map blueprint
-            earthMapImage.src = "https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?auto=format&fit=crop&w=1200&q=80";
-            earthMapImage.onload = () => { triggerMapRepaint(); };
+            // Load high definition unpartitioned 7-continent vector graphic image profile
+            worldOutlineImage.src = "https://images.unsplash.com/photo-1614730321146-b6fa6a46bcb4?auto=format&fit=crop&w=1200&q=80";
+            worldOutlineImage.onload = () => { triggerMapRepaint(); };
 
             canvas.addEventListener('click', handleCanvasCoordInput);
             window.addEventListener('resize', () => {
@@ -350,10 +349,10 @@
             if(!ctx) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Draw clean background map layer
-            ctx.drawImage(earthMapImage, 0, 0, canvas.width, canvas.height);
+            // Render unpartitioned base continent structures mapping profiles
+            ctx.drawImage(worldOutlineImage, 0, 0, canvas.width, canvas.height);
 
-            // Redraw border polygon parameters for all active registered nations
+            // Draw player-claimed sovereign perimeters
             Object.keys(globalClaimsCache).forEach(uid => {
                 const claim = globalClaimsCache[uid];
                 if(!claim.vertices || claim.vertices.length === 0) return;
@@ -365,7 +364,6 @@
                 }
                 ctx.closePath();
 
-                // Differentiate styles based on alignment tags
                 ctx.lineWidth = 3;
                 ctx.strokeStyle = claim.isNPC ? '#a8a29e' : (uid === currentUser.uid ? '#10b981' : '#ef4444');
                 ctx.stroke();
@@ -373,7 +371,7 @@
                 ctx.fillStyle = claim.flagBase ? claim.flagBase + "44" : "rgba(245, 158, 11, 0.2)";
                 ctx.fill();
 
-                // Draw centered indicator nameplate text
+                // Draw alignment labels
                 const avgX = claim.vertices.reduce((sum, v) => sum + v.x, 0) / claim.vertices.length;
                 const avgY = claim.vertices.reduce((sum, v) => sum + v.y, 0) / claim.vertices.length;
                 ctx.fillStyle = "#ffffff";
@@ -381,7 +379,7 @@
                 ctx.fillText(claim.countryName || "Tribal Realm", avgX - 25, avgY);
             });
 
-            // Draw local blueprint pins
+            // Draw placement vertex flags
             localClaimVertices.forEach((pt, index) => {
                 ctx.beginPath();
                 ctx.arc(pt.x, pt.y, 5, 0, 2 * Math.PI);
@@ -394,28 +392,27 @@
         }
 
         // ========================================== -->
-        //     OCEAN DETECTOR & VERTEX CONSTRAINT     -->
+        //     OCEAN FILTERING & 5-PIN SYSTEM MATRIX  -->
         // ========================================== -->
         function handleCanvasCoordInput(e) {
             const rect = canvas.getBoundingClientRect();
             const clickX = e.clientX - rect.left;
             const clickY = e.clientY - rect.top;
 
-            // ANALYTICAL OCEAN BLOCKED CHECKS
-            // Uses standard pixel mapping matrix sampling vectors
+            // Ocean Check: Samples pixel context color matrices from world graphics template
             const pixelSample = ctx.getImageData(clickX, clickY, 1, 1).data;
             const r = pixelSample[0], g = pixelSample[1], b = pixelSample[2];
             
-            // Rejects deep dark ocean coordinate matrices from basic canvas imagery assets
-            if (b > r * 1.4 && b > 35 && r < 45 && g < 75) {
-                alert("NAVIGATION PORTAL ERROR: Cannot found a country or tribe inside maritime deep sea waters! Pick solid terrain landmasses.");
+            // Rejects blue-heavy ocean coordinates
+            if (b > r * 1.35 && b > 35 && r < 45 && g < 75) {
+                alert("BOUNDS ERROR: Building civilizations inside sea water coordinate matrices is blocked! Target clear landmasses.");
                 return;
             }
 
             if(!globalClaimsCache[currentUser.uid]) {
-                // STRICT STARTING DOTS MAXIMUM CAPPED AT 5
+                // STRICT CAPPED DEPLOYMENT NODES
                 if(localClaimVertices.length >= 5) {
-                    alert("BORDER DEFINITION CONSTRAINT: Maximum starting dots limit reached (Capped at 5 maximum locations).");
+                    alert("PIN INTEGRITY LIMIT: Boundary setup has reached the maximum starting dots cap of 5 pins.");
                     return;
                 }
 
@@ -423,7 +420,7 @@
                 document.getElementById('vertex-counter').innerText = `${localClaimVertices.length} / 5`;
                 triggerMapRepaint();
             } else {
-                // VERIFY IF CLICKED ANOTHER NATION TO EXTRACT INTEL FIELD PROFILES
+                // DETECT IF SELECTION INTERSECTS REGISTERED SOVEREIGNTY CAMPS
                 let hitTargetUid = null;
                 Object.keys(globalClaimsCache).forEach(uid => {
                     if(checkPointInsidePolygon({x: clickX, y: clickY}, globalClaimsCache[uid].vertices)) {
@@ -442,7 +439,6 @@
         }
 
         function checkPointInsidePolygon(point, vs) {
-            // Ray-casting algorithm inside 2D coordinate space loops
             let x = point.x, y = point.y;
             let inside = false;
             for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
@@ -457,9 +453,9 @@
         function displayForeignIntelMatrix(uid) {
             const target = globalClaimsCache[uid];
             document.getElementById('intel-country').innerText = target.countryName || "Unnamed Realm";
-            document.getElementById('intel-ruler').innerText = target.rulerName || "NPC AI Core";
+            document.getElementById('intel-ruler').innerText = target.rulerName || "NPC Governor Core";
             document.getElementById('intel-nodes').innerText = target.vertices?.length || 0;
-            document.getElementById('intel-npc').innerText = target.isNPC ? "Automated NPC Sub-State" : "Active Human Commander";
+            document.getElementById('intel-npc').innerText = target.isNPC ? "Automated NPC Sub-State" : "Active Player Faction";
             
             document.getElementById('intel-modal').classList.remove('hidden-view');
         }
@@ -472,8 +468,8 @@
 
         window.submitDraftClaim = async function() {
             const designatedName = document.getElementById('claim-nation-name').value;
-            if(!designatedName) return alert("IDENTITY PROTOCOL ERROR: You must explicitly name your country at the start.");
-            if(localClaimVertices.length < 3) return alert("GEOMETRIC ERROR: Outline requires 3 or more coordinate vector pinpoints.");
+            if(!designatedName) return alert("IDENTITY PROTOCOL ERROR: You must name your country to establish sovereign power.");
+            if(localClaimVertices.length < 3) return alert("GEOMETRIC SUITE ERROR: Requires 3 or more coordinate lines.");
             
             const baseFlag = document.getElementById('flag-color-base').value;
             const stripeFlag = document.getElementById('flag-color-stripe').value;
@@ -491,21 +487,21 @@
         };
 
         // ========================================== -->
-        //          RENAME IDENTITY CAPABILITY        -->
+        //          RENAME TITLE CONTROL SYSTEM       -->
         // ========================================== -->
         window.commitCountryRename = async function() {
             const nextName = document.getElementById('rename-country-input').value;
-            if(!nextName) return alert("String buffer empty.");
+            if(!nextName) return alert("Designation field cannot be empty.");
             
             await update(ref(db, `servers/${activeServerId}/claims/${currentUser.uid}`), {
                 countryName: nextName
             });
-            alert("Sovereign label re-registered safely across cloud maps.");
+            alert("Sovereign label re-registered across active server directories.");
             document.getElementById('rename-country-input').value = "";
         };
 
         // ========================================== -->
-        //          WAR & HARDCORE BLACKLISTS         -->
+        //          WAR & ANNEXATION MATRICES         -->
         // ========================================== -->
         function listenToWorldSovereignty() {
             onValue(ref(db, `servers/${activeServerId}/claims`), (snap) => {
@@ -549,26 +545,26 @@
             const log = document.getElementById('war-list');
             
             if(Math.random() > 0.35) {
-                log.innerHTML += `<div class="text-emerald-400 font-bold">[VICTORY] Annexed territory from ${enemyClaim.countryName}!</div>`;
+                log.innerHTML += `<div class="text-emerald-400 font-bold">[VICTORY] Annexed coordinates from ${enemyClaim.countryName}!</div>`;
                 
                 const updatedPlayerVertices = [...globalClaimsCache[currentUser.uid].vertices, ...enemyClaim.vertices];
                 await update(ref(db, `servers/${activeServerId}/claims/${currentUser.uid}`), { vertices: updatedPlayerVertices });
                 
-                log.innerHTML += `<div class="text-red-500 font-bold">[BANISHED] ${enemyClaim.countryName} completely wiped off flat map context.</div>`;
+                log.innerHTML += `<div class="text-red-500 font-bold">[BANISHED] ${enemyClaim.countryName} completely erased from server registry.</div>`;
                 
                 if(!enemyClaim.isNPC) {
                     await set(ref(db, `servers/${activeServerId}/permaBanned/${targetUid}`), true);
                 }
                 await remove(ref(db, `servers/${activeServerId}/claims/${targetUid}`));
             } else {
-                log.innerHTML += `<div class="text-red-400">[DEFEAT] Attack vector repelled.</div>`;
+                log.innerHTML += `<div class="text-red-400">[DEFEAT] Assault vector neutralized by defenders.</div>`;
                 currentCash = Math.max(0, currentCash - 250);
             }
             calculateAndRepaintUiState(0);
         };
 
         // ========================================== -->
-        //     ECONOMY LOOP & CIVIL WAR SPLINTERING   -->
+        //     ECONOMY ENGINE & SPLINTER COUP ROUTINES -->
         // ========================================== -->
         function startEconomyLoopPipeline() {
             if(economyLoopInterval) clearInterval(economyLoopInterval);
@@ -602,7 +598,7 @@
                 
                 if(Math.random() < 0.12) {
                     clearInterval(economyLoopInterval);
-                    alert("⚠️ FACTION COUP: Your financial deficit caused a civil war fracture! Rebellions created new NPC-governed territories.");
+                    alert("⚠️ FACTION BREAKUP: Financial insolvency triggered an imperial civil war splinter event! Rebel colonies have occupied portions of your map coordinates.");
                     
                     const entireVertices = [...globalClaimsCache[currentUser.uid].vertices];
                     const halfSize = Math.floor(entireVertices.length / 2);
@@ -614,8 +610,8 @@
                     
                     const npcId = "npc_" + Math.floor(Math.random() * 100000);
                     await set(ref(db, `servers/${activeServerId}/claims/${npcId}`), {
-                        rulerName: "NPC Rebel Governor",
-                        countryName: "Splinter State " + Math.floor(Math.random() * 99),
+                        rulerName: "NPC Rebel Core",
+                        countryName: "Splinter Alliance " + Math.floor(Math.random() * 99),
                         vertices: rightFraction,
                         isNPC: true
                     });
