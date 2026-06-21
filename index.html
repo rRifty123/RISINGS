@@ -13,11 +13,8 @@
             background-size: cover;
             background-position: center;
         }
-        /* Crucial fix: The canvas sits at z-index 10 and explicitly handles clicks */
         .canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: auto; }
-        /* UI layer lets clicks pass straight through to the canvas underneath */
-        .ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; display: flex; flex-col: true; }
-        /* Interactive items like buttons override the transparent layer */
+        .ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; display: flex; flex-direction: column; }
         .interactive { pointer-events: auto; }
         .hidden-view { display: none !important; }
     </style>
@@ -43,7 +40,7 @@
                     <input type="password" id="auth-password" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-white focus:outline-none focus:border-amber-500">
                 </div>
                 <div class="flex space-x-2 pt-2">
-                    <button id="btn-login" class="flex-1 bg-amber-700 hover:bg-amber-600 transition p-2.5 rounded font-bold uppercase text-sm tracking-wider">Sign In</button>
+                    <button id="btn-login" class="flex-1 bg-amber-770 bg-amber-700 hover:bg-amber-600 transition p-2.5 rounded font-bold uppercase text-sm tracking-wider">Sign In</button>
                     <button id="btn-register" class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-600 transition p-2.5 rounded font-bold uppercase text-sm tracking-wider">Register</button>
                 </div>
             </div>
@@ -159,10 +156,10 @@
 
         <div class="ui-layer p-4 justify-between items-start">
             <div class="bg-slate-950/90 border border-amber-600/40 p-3 rounded shadow-lg interactive flex space-x-6 text-xs tracking-wider">
-                <div>REALM STATUS: <span id="panel-tier" class="text-amber-500 font-bold">TRIBE</span></div>
-                <div>POPULATION: <span id="panel-pop" class="text-emerald-400 font-bold">0</span></div>
-                <div>TREASURY: <span id="panel-cash" class="text-yellow-400 font-bold">$0</span> (<span id="panel-net">+$0</span>)</div>
-                <div>FOOD SUPPLY: <span id="panel-food" class="text-orange-400 font-bold">0</span></div>
+                <div>REALM STATUS: <span id="panel-tier" class="text-amber-500 font-bold">TRIBE INITIALIZED</span></div>
+                <div>POPULATION: <span id="panel-pop" class="text-emerald-400 font-bold">500</span></div>
+                <div>TREASURY: <span id="panel-cash" class="text-yellow-400 font-bold">$1,000</span> (<span id="panel-net">+$3/s</span>)</div>
+                <div>FOOD SUPPLY: <span id="panel-food" class="text-orange-400 font-bold">200</span></div>
             </div>
 
             <div class="flex space-x-2 interactive">
@@ -256,7 +253,7 @@
             </div>
 
             <div class="bg-slate-950/80 border border-slate-800 text-slate-400 text-[10px] px-4 py-1 rounded shadow uppercase tracking-wider interactive">
-                Left-Click on the canvas interface to select or manage localized tribal land operations.
+                Click "Structure Matrix" tab above to deploy military bases and farms directly onto the grid view!
             </div>
         </div>
     </div>
@@ -377,7 +374,6 @@
             if (user) {
                 currentUser = user;
                 document.getElementById('account-username').value = user.displayName || "";
-                document.getElementById('panel-tier').innerText = "TRIBE INITIALIZED";
                 switchView('main-menu');
                 initializeGlobalDirectoryListeners();
             } else {
@@ -577,7 +573,6 @@
             pointLight.position.set(0, 10, 20);
             scene.add(pointLight);
 
-            // Hook click selection directly to the canvas DOM element
             renderer.domElement.addEventListener('click', handleCanvasClick, false);
 
             window.removeEventListener('resize', onWindowResize);
@@ -588,7 +583,6 @@
         }
 
         function handleCanvasClick(event) {
-            // Logic for selecting maps or placing pieces directly onto coordinate frameworks
             console.log("Canvas targeted securely at coords:", event.clientX, event.clientY);
         }
 
@@ -637,6 +631,9 @@
             
             document.getElementById('context-panel').classList.remove('hidden-view');
             
+            // Initial forced paint to guarantee UI numbers sync instantly upon server load
+            calculateAndRepaintUiState(0);
+
             economyLoopInterval = setInterval(() => {
                 let farmIncome = (structuresList['farm'] || 0) * (isCountry ? 25 : 5);
                 let popIncome = (structuresList['village'] || 0) * 2 + ((structuresList['city'] || 0) * 5);
@@ -652,21 +649,29 @@
                 currentPopulation += popGrowth;
                 currentFood += (structuresList['farm'] || 0) * 2;
 
-                updateUIPanels(netRevenue);
-                verifyEvolutionaryThresholds();
+                calculateAndRepaintUiState(netRevenue);
             }, 1000);
         }
 
-        function updateUIPanels(net) {
-            document.getElementById('panel-cash').innerText = `$${currentCash}`;
+        function calculateAndRepaintUiState(netRevenue) {
+            // If the loop hasn't run yet, estimate the baseline revenue dynamically
+            if (netRevenue === 0 && economyLoopInterval) {
+                let farmIncome = (structuresList['farm'] || 0) * (isCountry ? 25 : 5);
+                let popIncome = (structuresList['village'] || 0) * 2 + ((structuresList['city'] || 0) * 5);
+                netRevenue = (10 + farmIncome + popIncome) - 7;
+            }
+
+            document.getElementById('panel-cash').innerText = `$${currentCash.toLocaleString()}`;
             document.getElementById('panel-pop').innerText = currentPopulation.toLocaleString();
-            document.getElementById('panel-food').innerText = currentFood;
+            document.getElementById('panel-food').innerText = currentFood.toLocaleString();
             
             const netEl = document.getElementById('panel-net');
-            netEl.innerText = net >= 0 ? `+$${net}/s` : `-$${Math.abs(net)}/s`;
-            netEl.className = net >= 0 ? 'text-emerald-400 font-bold' : 'text-red-500 font-bold';
+            netEl.innerText = netRevenue >= 0 ? `+$${netRevenue}/s` : `-$${Math.abs(netRevenue)}/s`;
+            netEl.className = netRevenue >= 0 ? 'text-emerald-400 font-bold' : 'text-red-500 font-bold';
             
-            document.getElementById('eco-farm-income').innerText = `+$${(structuresList['farm'] || 0) * (isCountry ? 25 : 5)}/s`;
+            document.getElementById('eco-farm-income').innerText = `+$${((structuresList['farm'] || 0) * (isCountry ? 25 : 5))}/s`;
+            
+            verifyEvolutionaryThresholds();
         }
 
         function verifyEvolutionaryThresholds() {
@@ -713,18 +718,29 @@
 
         window.purchaseAssetNode = function(id, cost) {
             if(currentCash < cost) return alert("Financial reserves insufficient.");
+            
+            // Process the transaction immediately
             currentCash -= cost;
             structuresList[id] = (structuresList[id] || 0) + 1;
             
+            // FORCE INSTANT FRONTEND DRAW OVERRIDES
+            calculateAndRepaintUiState(0);
+            renderBuildSystemMatrix();
+            
+            // Build 3D meshes along the Z-axis so they rise visibly upward on top of the map
             if(scene) {
-                const geometry = new THREE.BoxGeometry(1.5, Math.random() * 3 + 1, 1.5);
-                const material = new THREE.MeshBasicMaterial({ color: isCountry ? 0x06b6d4 : 0xd97706, wireframe: true });
+                const height = Math.random() * 4 + 2;
+                const geometry = new THREE.BoxGeometry(2.0, 2.0, height);
+                const material = new THREE.MeshBasicMaterial({ 
+                    color: isCountry ? 0x06b6d4 : 0xd97706, 
+                    wireframe: true 
+                });
                 const buildingMesh = new THREE.Mesh(geometry, material);
-                buildingMesh.position.set(Math.random() * 30 - 15, Math.random() * 16 - 8, 0.5);
+                
+                // Position randomly across the map, with half its height pointing out toward the screen
+                buildingMesh.position.set(Math.random() * 40 - 20, Math.random() * 20 - 10, height / 2);
                 scene.add(buildingMesh);
             }
-
-            renderBuildSystemMatrix();
         };
 
         // ========================================== -->
@@ -764,6 +780,7 @@
             item.innerHTML = `<span>In Conflict: ${targetName}</span> <button onclick="simulate3DWarzone()" class="bg-red-700 text-white font-bold px-2 rounded text-[9px] uppercase">Enter 3D Warzone</button>`;
             warList.appendChild(item);
             alert(`TACTICAL ALERT: State of total war declared against ${targetName}.`);
+            calculateAndRepaintUiState(0);
         };
 
         window.requestAllianceAction = function(targetName) {
@@ -777,6 +794,7 @@
         window.handleExploreAction = function() {
             if(currentCash < 500) return alert("Inadequate operational funding reserves ($500 needed).");
             currentCash -= 500;
+            calculateAndRepaintUiState(0);
             alert("Scouting party dispatched into coordinates.");
             
             setTimeout(() => {
